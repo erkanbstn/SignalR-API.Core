@@ -1,0 +1,48 @@
+﻿
+@{
+    ViewData["Title"] = "Index";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section Scripts{
+    <script src="~/lib/microsoft/signalr/dist/browser/signalr.js"></script>
+    <script src="~/lib/microsoft/signalr/dist/browser/signalr.min.js"></script>
+    <script type="text/javascript">
+        $(document).ready(()=>{
+            var connection = new signalR.HubConnectionBuilder().withUrl("https://localhost:7099/MyHub").build();
+            $("#conStatus").text(connection.state);
+            connection.start().then(() => {
+                $("#conStatus").text(connection.state);
+                
+
+            }).catch((err) => {
+                console.log(err);
+            });
+
+            $("#BtnSaveName").click(() => {
+                connection.invoke("SendName", $("#txtName").val()).catch((err) => {
+                    console.log(err);
+                });
+            });
+
+            connection.on("ReceiveName", (name) => {
+                console.log(name);
+            });
+        })
+        
+
+    </script>
+}
+<h1>SignalR Client Side</h1>
+<br />
+<div class="row">
+    <div class="col-md-8 offset-2">
+        <input class="form-control" type="text" id="txtName"/>
+        <hr />
+        <input class="btn btn-primary" type="button" value="Değişiklikleri Kaydet" id="BtnSaveName" />
+        <div class="alert alert-info">
+            Bağlantı Durumu : <strong id="conStatus"></strong>
+        </div>
+    </div>
+</div>
+
