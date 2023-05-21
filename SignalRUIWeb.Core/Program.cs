@@ -22,6 +22,6 @@ app.UseAuthorization();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=ClientSide}/{action=Index}/{id?}");
+    pattern: "{controller=Covid}/{action=Covid19Show}/{id?}");
 
 app.Run();
