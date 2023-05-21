@@ -9,14 +9,59 @@
     <script src="~/lib/microsoft/signalr/dist/browser/signalr.min.js"></script>
     <script type="text/javascript">
         $(document).ready(()=>{
-            var connection = new signalR.HubConnectionBuilder().withUrl("https://localhost:7099/MyHub").build();
-            $("#conStatus").text(connection.state);
-            connection.start().then(() => {
-                $("#conStatus").text(connection.state);
-                
+            var connection = new signalR.HubConnectionBuilder()
+            .configureLogging(signalR.LogLevel.Debug)
+            .withAutomaticReconnect()
+            .withUrl("https://localhost:7099/MyHub").build();
 
+            function statusShow(){
+                $("#conStatus").text(connection.state);
+            }
+
+            function Start(){
+                connection.start().then(() => {
+                    $("#loading").hide();
+                    statusShow();  
+                    connection.invoke("GetNames");
             }).catch((err) => {
                 console.log(err);
+                setTimeout(()=>{start(),2000});
+            });
+            }
+
+            statusShow();
+            Start();
+
+            connection.onreconnecting(err=>{
+                $("#loading").show();
+                statusShow();
+            });
+             connection.onreconnected(connectionId =>{
+                $("#loading").hide();
+                statusShow();
+             });
+
+             connection.onclose(()=>{
+                  $("#loading").hide();
+                    statusShow();
+             });
+
+              connection.on("ReceiveClientCount", (clientCount) => {
+                $("#client").text(clientCount);
+            });
+
+            connection.on("ReceiveNames",(names)=>{
+                $("#namesList").empty();
+                names.forEach((item,index)=>{
+                     $("#namesList").append(`<li class='list-group-item'>${item}</li>`);
+                });
+            });
+
+             connection.on("Error", (errorText) => {
+                alert(errorText);
+            });
+            connection.on("Notify",(teamCount)=>{
+                $("#notify").html(`<div class="alert alert-success">${teamCount}</div>`)
             });
 
             $("#BtnSaveName").click(() => {
@@ -26,7 +71,7 @@
             });
 
             connection.on("ReceiveName", (name) => {
-                console.log(name);
+                $("#namesList").append(`<li class='list-group-item'>${name}</li>`)
             });
         })
         
@@ -35,14 +80,37 @@
 }
 <h1>SignalR Client Side</h1>
 <br />
+<br />
+<div class="alert alert-info">
+    <div class="float-left">
+    Bağlantı Durumu : <strong id="conStatus"></strong>
+    , Client Sayısı : <strong id="client"></strong>
+    </div>
+    <div class="float-right">
+        <div id="loading" class="spinner-border" role="status">
+  <span class="visually-hidden">Tekrar Bağlanıyor...</span>
+</div>
+    </div>
+    
+   
+
+</div>
+ <div id="notify">
+
+    </div>
+<br />
+<br />
 <div class="row">
     <div class="col-md-8 offset-2">
         <input class="form-control" type="text" id="txtName"/>
         <hr />
         <input class="btn btn-primary" type="button" value="Değişiklikleri Kaydet" id="BtnSaveName" />
-        <div class="alert alert-info">
-            Bağlantı Durumu : <strong id="conStatus"></strong>
-        </div>
+      
+    </div>
+    <div class="col-md-8 offset-2">
+        <ul class="list-group" id="namesList">
+
+        </ul>
     </div>
 </div>
 
